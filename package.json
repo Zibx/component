@@ -1,0 +1,23 @@
+{
+  "name": "component",
+  "version": "0.0.1",
+  "description": "",
+  "main": "factory.js",
+  "scripts": {
+    "test": "_mocha",
+    "coverage": "istanbul cover _mocha -- -R spec"
+  },
+  "author": "",
+  "license": "BSD-2-Clause",
+  "dependencies": {
+    "nvm": "*",
+    "z-lib": "*",
+    "z-observable": "*",
+    "q-model": "*"
+  },
+  "devDependencies": {
+    "chai": "*",
+    "mocha": "*",
+    "istanbul": "*"
+  }
+}
