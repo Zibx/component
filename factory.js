@@ -46,21 +46,27 @@ module.exports = (function () {
          @arg [init]<function>: component constructor
          */
         define: function (name, cfg, init) {
-            if(this.cmps[name]) {
+            var cmps = this.cmps,
+                _self = this;
+            if(cmps[name]) {
                 if(this.versionControl){
                     throw new Error('component ' + name + ' is already defined');
                 }else{
-                    if(this.versionComparator(this.cmps[name]._version, cfg._version) > 0){
-                        console.warn('component ' + name + ' is already defined, return v'+ this.cmps[name]._version +', tried to load v'+ cfg._version);
-                        return this.cmps[name];
+                    if(this.versionComparator(cmps[name]._version, cfg._version) > 0){
+                        console.warn('component ' + name + ' is already defined, return v'+ cmps[name]._version +', tried to load v'+ cfg._version);
+                        return cmps[name];
                     }else{
-                        console.warn('component ' + name + ' is already defined, overwrite old v'+ this.cmps[name]._version +', by new one v'+ cfg._version)
+                        console.warn('component ' + name + ' is already defined, overwrite old v'+ cmps[name]._version +', by new one v'+ cfg._version)
                     }
                 }
             }
 
             cfg._type = name;
-            return this.cmps[name] = ComponentConstructorFactory(cfg, init);
+            cmps[name] = ComponentConstructorFactory(cfg, init);
+
+            return function( cfg ){
+                return _self.build(name, cfg);
+            }
         },
         build: function (what, cfg){
             if( typeof what === 'string' )

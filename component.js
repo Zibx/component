@@ -4,7 +4,10 @@
  * *
  */;// Copyright by Ivan Kubota. 15 May 2016.
 // Copyright Quokka inc 2016
-
+/*
+Comments:
+component does not depends on esprima. Only QS does.
+ */
 //@exports ConstructorFactory
 //@exports ConstructorFactory
 module.exports = (function (){
@@ -17,15 +20,23 @@ module.exports = (function (){
                 return this.ctx.get(key);
             },
             set: function( key, data ){
-                if(data instanceof PieceOfReactivity){
-                    if( !data || !data.value.length )
-                        return;
-                    var ctx = this.ctx,
-                        setter = this.setter[key] || this.setter['other'];
-                    brick.reactive.wrap( data, ctx, setter.bind( this, key ) );
-                }else{
+                var ctx = this.ctx,
+                    setter = this.setter[key] || this.setter['other'];
+                //if(key === 'value')debugger;
+                if(data instanceof PieceOfReactivity)
+                    data.bind(ctx, key);
+                else if(setter.call(this, key, data) !== false)
                     this.ctx.set(key, data);
-                }
+                /*
+                    data = new PieceOfReactivity(this.ctx, [key], setter.bind( this, key ));
+
+                if( !data || !data.value.length )
+                    return;*!/
+                //this.ctx.
+                if(setter.call(this, key, data) !== false)
+                    this.ctx.set(key, data);*/
+                //brick.reactive.wrap( data, ctx, setter.bind( this, key ) );
+
             },
             subscribe: function(){
                 this.mapping = this.mapping || {};
@@ -103,8 +114,10 @@ module.exports = (function (){
                     }
                 },
                 id: function (name, val) {
-                    if(val.trim()){
+                    var isString = typeof val === 'string';
+                    if((isString && val.trim()) || (!isString && val)){
                         try {
+                            // this try is for shit purpose only. Shit in global scope. Check for valid dot notation variable name
                             val = eval('(function(){var o = ({});o.' + val + '\n=true;for(var i in o)if(o.hasOwnProperty(i))return i;})()');
                             window[val] = this.ctx;
                         }catch(e){}
@@ -120,29 +133,55 @@ module.exports = (function (){
         deepApply: ['setter'],
         componentPrototype: componentPrototype,
         ConstructorFactory: function( cfg, init ){
+            var cmpCfg = {},
+                reactive = {},
+                val;
+
+            for( i in cfg ){
+                val = cfg[i];
+                if(out.deepApply.indexOf(i)>-1)
+                    continue;
+                if(val instanceof PieceOfReactivity){
+                    reactive[i] = val;
+                }else{
+                    cmpCfg[i] = val;
+                }
+            }
+
             var Cmp = init || function( cfg ){
+                    var i, ctx, ctxData;
                     this.cfg = cfg;
                     Z.apply( this, cfg );
                     if( this.component ){
-                        this.ctx = this.ctx || (this.parent && this.parent.ctx.extend()) || new out.context();
-                        this.ctx.cmp = this;
+                        ctxData = Object.create(cmpCfg);
+                        ctx = this.ctx = this.ctx || (this.parent && this.parent.ctx.extend(ctxData)) || new out.context(ctxData);
+
+                        ctx.cmp = this;
                     }
                     //debugger;
                     observable.prototype._init.call(this);
                     //this.component && this.ctx.set( 'items', this.node.data );
-                    for( var i in cfg ){
-                        this.ctx.set(i, cfg[i]);
+                    for( i in cfg ){
+                        ctx.set(i, cfg[i]);
                     }
+
                     this.parser();
+
+                    for( i in reactive ){
+                        reactive[i].bind(ctx, i);
+                    }
 
                     this.init();
                     this.subscribe();
+
+
                 },
                 overlays = out.deepApply.reduce( function( storage, deepName ){
                     if( deepName in cfg ){
                         storage[deepName] = cfg[deepName];
                         delete cfg[deepName];
                     }
+                    return storage;
                 }, {} ),
                 proto = Cmp.prototype = Z.apply( Object.create( out.componentPrototype ), cfg ),
                 i;

@@ -17,10 +17,11 @@ describe('factory', function () {
             setter: {
                 value: function (name, val) {
                     this.el.value = val;
-                },
-                other: function (name, val, data) {
-                    console.log(arguments);
-                    this.el[name] = val;
+                }
+            },
+            getter: {
+                value: function( name ){
+                    return this.el.value;
                 }
             }
         });
@@ -33,5 +34,10 @@ describe('factory', function () {
         assert.equal(obj.ctx.get('mur'), 'ioi');
         assert.equal(obj.get('test'), 17);
         assert.equal(obj.get('mur'), 'ioi');
-    })
+
+        obj.set('value', 2873);
+        assert.equal(obj.el.value, 2873);
+    });
+
+
 });

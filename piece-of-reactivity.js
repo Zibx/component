@@ -4,60 +4,56 @@
  * *
  */;// Copyright by Ivan Kubota. 23 May 2016.
 // Copyright Quokka inc 2016
+/*
+  CTX agreement
+    ctx must have method on, set, get.
+    ctx.on must be able to subscribe to variable change
+    ctx.set must set context variable
+    ctx.get must get context variable
+ */
 module.exports = (function(){
     'use strict';
-    var evalute = function(  ){
-        var last, _self = this;
-        return ;
-    };
     /*
     Reactivity - a piece of reactivity
-    @arg ctx<model> - model to subscribe for changes
-    @arg dependencies<Array> - list of variable names
-    @arg fn<Function> - function to execute when something changes
+      @arg ctx<model> - model to subscribe for changes
+      @arg dependencies<Array> - list of variable names
+      @arg fn<Function> - function to execute when something changes
+
      */
-    var Reactivity = function (ctx, dependencies, fn) {
+    var Reactivity = function (vars, fn) {
         this.fn = fn;
-        this.ctx = ctx;
         this.vars = vars;
-        this.dependecies = {};
-        var _self = this,
-            wrapped = this.wrapped = function(  ){
-                _self.evaluate();
-            };
-
-        if (dependencies.length)
-            ctx.on(dependencies, wrapped);
-
-        wrapped();
     };
     Reactivity.prototype = {
-        evaluate: function () {
-            var _self = this;
-            return function(){
-                var out = '', i, _i, item, val = data.value, res;
-                for (i = 0, _i = val.length; i < _i; i++) {
-                    item = val[i];
-                    if (item[0] === 1) { // do not think about it anymore. it was 'item[0]'
-                        item = item[1];
-                        res = item.fn.apply(_self, item.vars.map(function (name) {
-                            return _self.get(name);
-                        }));
-                        if(out.trim()=='' && (typeof res==='boolean'))
-                            out = res;
-                        else
-                            out += res||'';
-
-                    } else {
-                        out += item[1];
+        bind: function( ctx, key, debounce ){
+            var vars = this.vars,
+                fn = this.fn,
+                lastValue, lastInited = false,
+                dependecies = {}, i, _i, varName,
+                argPos = {},
+                lastArgs = [],
+                wrapped = function(){
+                    var value = fn.apply(ctx, lastArgs);
+                    if(!lastInited || lastValue !== value){
+                        lastInited = true;
+                        lastValue = value;
+                        ctx.set( key, value );
                     }
-
+                };
+            //ctx.on(this.vars, wrapped);
+            if (_i = vars.length){
+                for(i = 0; i < _i; i++ ){
+                    varName = vars[i];
+                    argPos[varName] = i;
+                    lastArgs[i] = dependecies[varName] = ctx.get(varName);
                 }
-                if(out !== this.last) {
-                    fn.call(_self, out, data);
-                    this.last = out;
-                }
+                ctx.on( vars, function(val, type, oldVal, key){
+                    lastArgs[argPos[key]] = dependecies[key] = val;
+                    wrapped();
+                } );
+                //console.log(key, vars, lastArgs)
             }
+            wrapped();
         }
     };
     return Reactivity;
