@@ -13,6 +13,7 @@ component does not depends on esprima. Only QS does.
 module.exports = (function (){
     'use strict';
     var PieceOfReactivity = require('./piece-of-reactivity');
+    var ObservableSequence = require('observable-sequence');
     var Z = require( 'z-lib' ),
         observable = require( 'z-observable' ),
         componentPrototype = {
@@ -67,6 +68,7 @@ module.exports = (function (){
             init: function(){
 
                 this.createEl && this.createEl();
+                this._initChildren();
                 /*var sub = this.node.params.subNodes, l, item,
                     items = this.items = new brick.Array();
                 this.listenItems();
@@ -81,9 +83,27 @@ module.exports = (function (){
                     l.next();
                 }*/
             },
+            _initChildren: function(){
+                if(this.nestable){
+                    this.items = new ObservableSequence(this.items);
+                    var iterator = this.items.iterator(), item, ctor;
+                    while(item = iterator.next()){
+                        ctor = item.item;
+                        if(typeof ctor === 'function'){
+                            (ctor._factory || this._factory).build(ctor, item);
+                        }
+                        console.log('i', item.item)
+                    }
+
+                }
+
+            },
             parser: function(){
                 //var parts = brick.tokenize.splitExpression( brick.tokenize.getExpressions( this.node.params.rest ), ':', 2 );
                 //this.cfg = { id: { value: parts[0] }, val: { value: parts[1] } };
+            },
+            children: function(){
+                return this.children.length
             },
             setter: {
                 cls: function (key, val) {
@@ -165,7 +185,7 @@ module.exports = (function (){
                         ctx.set(i, cfg[i]);
                     }
 
-                    this.parser();
+                    //this.parser();
 
                     for( i in reactive ){
                         reactive[i].bind(ctx, i);

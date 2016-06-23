@@ -13,7 +13,8 @@
     "nvm": "*",
     "z-lib": "*",
     "z-observable": "*",
-    "q-model": "*"
+    "q-model": "*",
+    "observable-sequence": "*"
   },
   "devDependencies": {
     "chai": "*",

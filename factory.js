@@ -63,7 +63,8 @@ module.exports = (function () {
 
             cfg._type = name;
             cmps[name] = ComponentConstructorFactory(cfg, init);
-
+            cmps[name].prototype._factory = cmps[name]._factory = this;
+            cmps[name].prototype._type = cmps[name]._type = name;
             return function( cfg ){
                 return _self.build(name, cfg);
             }
@@ -71,15 +72,17 @@ module.exports = (function () {
         build: function (what, cfg){
             if( typeof what === 'string' )
                 cfg._type = what;
-            else
+            else if(typeof what === 'function'){
+                cfg._type = what._type;
+            }else
                 cfg = what;
-
+            console.log(what, cfg)
             var node = cfg.node,
             //params = brick.tokenize.paramsExtractor(node, true),
                 cmps = this.cmps,
                 stats = this.stats,
                 constructor = cmps[cfg._type];
-            console.log( constructor )
+
             var cmp = new constructor( cfg );
 
             stats[cmp._type] = (stats[cmp._type] | 0) + 1;

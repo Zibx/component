@@ -20,9 +20,10 @@ describe('nesting', function (){
                 this.el = {};
             }
         } ),
-        c = f.define('c',{
+        c = f.define('c', {
             component: true,
-            items: [a,b],
+            nestable: true,
+            items: [{item: a, items: [a, {item: 'b'}]}, b],
             createEl: function(){
                 this.el = {};
             }
@@ -32,6 +33,7 @@ describe('nesting', function (){
         var dom = c({
             value: 1
         });
-        console.log( dom.items ,2)
+        assert.equal(dom.children().length, 2)
+        console.log( dom.items, 2 )
     } )
 });
