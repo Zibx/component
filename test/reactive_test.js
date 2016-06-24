@@ -76,6 +76,7 @@ describe('reactive', function (){
         }
     });
     it( 'should be fast enough', function(){
+        // do not run this test in heavy cpu loaded env.
         var start = +new Date(), diff;
         for(var i = 0; i < 5000; i++){
             obj.set( 'value', i );

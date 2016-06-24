@@ -47,7 +47,8 @@ module.exports = (function () {
          */
         define: function (name, cfg, init) {
             var cmps = this.cmps,
-                _self = this;
+                _self = this,
+                builder;
             if(cmps[name]) {
                 if(this.versionControl){
                     throw new Error('component ' + name + ' is already defined');
@@ -60,30 +61,30 @@ module.exports = (function () {
                     }
                 }
             }
-
+            builder = function( cfg, iter ){
+                return _self.build(name, cfg, iter);
+            };
             cfg._type = name;
             cmps[name] = ComponentConstructorFactory(cfg, init);
             cmps[name].prototype._factory = cmps[name]._factory = this;
-            cmps[name].prototype._type = cmps[name]._type = name;
-            return function( cfg ){
-                return _self.build(name, cfg);
-            }
+            builder._type = cmps[name].prototype._type = cmps[name]._type = name;
+            return builder;
         },
-        build: function (what, cfg){
+        build: function (what, cfg, iter){
             if( typeof what === 'string' )
                 cfg._type = what;
             else if(typeof what === 'function'){
                 cfg._type = what._type;
             }else
                 cfg = what;
-            console.log(what, cfg)
+            //console.log(what, cfg)
             var node = cfg.node,
             //params = brick.tokenize.paramsExtractor(node, true),
                 cmps = this.cmps,
                 stats = this.stats,
                 constructor = cmps[cfg._type];
-
-            var cmp = new constructor( cfg );
+            //console.log(cfg._type)
+            var cmp = new constructor( cfg, iter );
 
             stats[cmp._type] = (stats[cmp._type] | 0) + 1;
 

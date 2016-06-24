@@ -66,6 +66,7 @@ module.exports = (function (){
                 return out;
             },
             init: function(){
+                observable.prototype._init.call(this);
 
                 this.createEl && this.createEl();
                 this._initChildren();
@@ -83,27 +84,49 @@ module.exports = (function (){
                     l.next();
                 }*/
             },
+            itemsSubscribe: function(  ){
+                var _self = this;
+                this.items.on('add', function(el){
+                    el.parent = _self;
+                } );
+                this.items.on('remove', function( el ){
+                    el.parent = null;
+                });
+            },
             _initChildren: function(){
                 if(this.nestable){
-                    this.items = new ObservableSequence(this.items);
-                    var iterator = this.items.iterator(), item, ctor;
+
+                    var iterator = new ObservableSequence(this.items || []).iterator(), item, ctor, type, cmp,
+                        items = this.items = new ObservableSequence([]);
+
+                    this.itemsSubscribe();
                     while(item = iterator.next()){
-                        ctor = item.item;
-                        if(typeof ctor === 'function'){
-                            (ctor._factory || this._factory).build(ctor, item);
+                        if(typeof item === 'function')
+                            ctor = item;
+                        else
+                            ctor = item.item;
+                        
+                        if(type = typeof ctor === 'function'){
+                            cmp = (ctor._factory || this._factory).build(ctor, item, iterator);
+                        }else if(type === 'string'){
+                            cmp = this._factory.build(ctor, item, iterator);
                         }
-                        console.log('i', item.item)
+                        this.addChild(cmp);
+
                     }
 
                 }
 
+            },
+            addChild: function(child){
+                this.items.push(child);
             },
             parser: function(){
                 //var parts = brick.tokenize.splitExpression( brick.tokenize.getExpressions( this.node.params.rest ), ':', 2 );
                 //this.cfg = { id: { value: parts[0] }, val: { value: parts[1] } };
             },
             children: function(){
-                return this.children.length
+                return this.items;//.length
             },
             setter: {
                 cls: function (key, val) {
@@ -179,7 +202,7 @@ module.exports = (function (){
                         ctx.cmp = this;
                     }
                     //debugger;
-                    observable.prototype._init.call(this);
+
                     //this.component && this.ctx.set( 'items', this.node.data );
                     for( i in cfg ){
                         ctx.set(i, cfg[i]);
