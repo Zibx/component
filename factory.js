@@ -71,19 +71,23 @@ module.exports = (function () {
             return builder;
         },
         build: function (what, cfg, iter){
+            cfg = cfg || {};
+            
             if( typeof what === 'string' )
                 cfg._type = what;
             else if(typeof what === 'function'){
                 cfg._type = what._type;
             }else
                 cfg = what;
-            //console.log(what, cfg)
+
             var node = cfg.node,
             //params = brick.tokenize.paramsExtractor(node, true),
                 cmps = this.cmps,
                 stats = this.stats,
                 constructor = cmps[cfg._type];
             //console.log(cfg._type)
+            if(typeof constructor !== 'function')
+                throw new Error(cfg._type+'|'+what);
             var cmp = new constructor( cfg, iter );
 
             stats[cmp._type] = (stats[cmp._type] | 0) + 1;

@@ -69,6 +69,7 @@ module.exports = (function (){
                 observable.prototype._init.call(this);
 
                 this.createEl && this.createEl();
+                
                 this._initChildren();
                 /*var sub = this.node.params.subNodes, l, item,
                     items = this.items = new brick.Array();
@@ -87,26 +88,41 @@ module.exports = (function (){
             itemsSubscribe: function(  ){
                 var _self = this;
                 this.items.on('add', function(el){
+
+                    if(el === void 0)debugger;
                     el.parent = _self;
+                    _self.addToTree(el);
+                    // best place to insert to dom.
                 } );
                 this.items.on('remove', function( el ){
                     el.parent = null;
+                    _self.removeFromTree(el);
                 });
             },
+            addToTree: function(){},
+            removeFromTree: function(){},
             _initChildren: function(){
                 if(this.nestable){
 
                     var iterator = new ObservableSequence(this.items || []).iterator(), item, ctor, type, cmp,
                         items = this.items = new ObservableSequence([]);
-
+                    
                     this.itemsSubscribe();
+                    this.preInit && this.preInit();
+                    
                     while(item = iterator.next()){
                         if(typeof item === 'function')
                             ctor = item;
-                        else
+                        else if(typeof item === 'object')
                             ctor = item.item;
+                        else {
+                            ctor = item;
+                            item = {_type: ctor};
+                        }
                         
-                        if(type = typeof ctor === 'function'){
+                        item.parent = this;
+                        
+                        if((type = typeof ctor) === 'function'){
                             cmp = (ctor._factory || this._factory).build(ctor, item, iterator);
                         }else if(type === 'string'){
                             cmp = this._factory.build(ctor, item, iterator);
@@ -127,6 +143,18 @@ module.exports = (function (){
             },
             children: function(){
                 return this.items;//.length
+            },
+            find: function(type, out){
+                debugger;
+                out = out || [];
+                if(!this.items)
+                    return false;
+                this.items.forEach(function (item) {
+                    if(item._type === type)
+                        out.push(item);
+                    item.find(type, out);
+                });
+                return out;
             },
             setter: {
                 cls: function (key, val) {

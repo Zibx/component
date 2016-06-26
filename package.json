@@ -19,6 +19,7 @@
   "devDependencies": {
     "chai": "*",
     "mocha": "*",
-    "istanbul": "*"
+    "istanbul": "*",
+    "dom-lite": "*"
   }
 }

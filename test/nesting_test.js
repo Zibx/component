@@ -4,7 +4,7 @@
 var factory = require('../factory'),
     assert = require('chai').assert;
 
-var PieceOfReactivity = require('../piece-of-reactivity');
+//var PieceOfReactivity = require('../piece-of-reactivity');
 
 describe('nesting', function (){
     var f = new factory(), obj,
@@ -62,6 +62,7 @@ describe('nesting', function (){
             dom.click();
 
         assert.equal(dom.get('clicked'), 10);
-
-    } )
+        assert.equal(dom.find('a').length, 2);
+        assert.equal(dom.find('b').length, 2);
+    } );
 });
