@@ -24,10 +24,12 @@ module.exports = (function (){
                 var ctx = this.ctx,
                     setter = this.setter[key] || this.setter['other'];
                 //if(key === 'value')debugger;
-                if(data instanceof PieceOfReactivity)
+                if(data instanceof PieceOfReactivity) {
                     data.bind(ctx, key);
-                else if(setter.call(this, key, data) !== false)
+                } else {
+                    //if(setter.call(this, key, data) !== false) {
                     this.ctx.set(key, data);
+                }
                 /*
                     data = new PieceOfReactivity(this.ctx, [key], setter.bind( this, key ));
 
@@ -69,8 +71,15 @@ module.exports = (function (){
                 observable.prototype._init.call(this);
 
                 this.createEl && this.createEl();
-                
+
+                var setters=this.setter;
+                var self = this;
+
                 this._initChildren();
+
+                this.ctx.observe("change",function(name, newVal,oldVal) {
+                    setters[name] && setters[name].call(self, name, newVal);
+                });
                 /*var sub = this.node.params.subNodes, l, item,
                     items = this.items = new brick.Array();
                 this.listenItems();
@@ -106,10 +115,10 @@ module.exports = (function (){
 
                     var iterator = new ObservableSequence(this.items || []).iterator(), item, ctor, type, cmp,
                         items = this.items = new ObservableSequence([]);
-                    
+
                     this.itemsSubscribe();
                     this.preInit && this.preInit();
-                    
+
                     while(item = iterator.next()){
                         if(typeof item === 'function')
                             ctor = item;
@@ -119,9 +128,9 @@ module.exports = (function (){
                             ctor = item;
                             item = {_type: ctor};
                         }
-                        
+
                         item.parent = this;
-                        
+
                         if((type = typeof ctor) === 'function'){
                             cmp = (ctor._factory || this._factory).build(ctor, item, iterator);
                         }else if(type === 'string'){
@@ -145,7 +154,7 @@ module.exports = (function (){
                 return this.items;//.length
             },
             find: function(type, out){
-                debugger;
+                //debugger;
                 out = out || [];
                 if(!this.items)
                     return false;
@@ -158,7 +167,7 @@ module.exports = (function (){
             },
             setter: {
                 cls: function (key, val) {
-                    //console.log(key, val);
+                    console.log(key, val);
                     var id, cls;
                     val = val.replace(/#[^\.]*/,function(val){
                         id = val.substr(1);
@@ -199,6 +208,7 @@ module.exports = (function (){
         out;
 
     Z.applyIfNot(componentPrototype, observable.prototype);
+
     return out = {
         context: require('q-model'),
         deepApply: ['setter'],
